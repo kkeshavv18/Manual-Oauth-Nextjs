@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Setting Up GitHub OAuth for the Application
+To use this application, you need to register an OAuth application with GitHub. Follow these steps:
 
-## Getting Started
+1. Register a new OAuth application with GitHub
 
-First, run the development server:
+Go to your GitHub account settings
+Navigate to "Developer settings" > "OAuth Apps" > "New OAuth App"
+Fill in the following details:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Application name: Your app name (e.g., "NextJS OAuth Demo")
+Homepage URL: http://localhost:3000 (for development)
+Application description: Optional description of your application
+Authorization callback URL: http://localhost:3000/api/auth/callback/github
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Click "Register application"
+After registration, you'll see your Client ID
+Generate a new client secret by clicking "Generate a new client secret"
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2. Configure environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copy the .env.local file template
+Fill in the required variables:
 
-## Learn More
+GITHUB_CLIENT_ID: The client ID from GitHub
+GITHUB_CLIENT_SECRET: The client secret from GitHub
+OAUTH_REDIRECT_URL_BASE: Set to http://localhost:3000/api/auth/callback for development
+JWT_SECRET: Generate a strong random string (at least 32 characters)
 
-To learn more about Next.js, take a look at the following resources:
+Example of generating a JWT secret using Node.js:
+bashnode -e "console.log(require('crypto').randomBytes(32).toString('hex'))" 3. Run the application
+bashnpm run dev
+Visit http://localhost:3000 in your browser. You should be redirected to the login page where you can authenticate with GitHub.
+For Production Deployment
+When deploying to production:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Update the GitHub OAuth application settings with your production URLs
+Update the environment variables with production values
+Make sure to set a strong JWT_SECRET
+Consider adding rate limiting and additional security measures
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Security Considerations
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The application uses encrypted cookies to store session data
+All cookies are set with HttpOnly, Secure, and SameSite flags
+CSRF protection is implemented via state parameters in the OAuth flow
+PKCE (Proof Key for Code Exchange) is used to prevent authorization code interception attacks
