@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Paths that are public and don't require authentication
 const publicPaths = ["/login", "/api/auth/login", "/api/auth/callback/github"];
 
 export function middleware(request: NextRequest) {

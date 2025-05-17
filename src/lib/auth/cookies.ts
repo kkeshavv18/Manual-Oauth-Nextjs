@@ -27,7 +27,12 @@ export async function getCookieAdapter(): Promise<Cookies> {
       return cookie ? { name: cookie.name, value: cookie.value } : undefined;
     },
     delete: (key) => {
-      cookieStore.delete(key);
+      cookieStore.set(key, "", {
+        expires: new Date(0), // Set to epoch time (1970)
+        secure: true,
+        httpOnly: true,
+        sameSite: "lax",
+      });
     },
   };
 }

@@ -9,6 +9,7 @@ type User = {
   email: string;
   role: string;
   provider: string;
+  accessToken: string;
 };
 
 export default function DashboardPage() {
@@ -41,7 +42,6 @@ export default function DashboardPage() {
   const handleLogout = () => {
     window.location.href = "/api/auth/logout";
   };
-  console.log("user information: ", user);
 
   if (loading) {
     return (
@@ -57,7 +57,7 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-red-500">Dashboard</h1>
         <button
           onClick={handleLogout}
           className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
@@ -93,7 +93,9 @@ export default function DashboardPage() {
           </div>
         </div>
       ) : (
-        <div>Failed to fetch user</div>
+        <div className="text-3xl text-center text-red-500">
+          Failed to fetch user
+        </div>
       )}
     </div>
   );

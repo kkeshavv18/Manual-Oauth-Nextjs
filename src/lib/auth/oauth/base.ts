@@ -1,18 +1,18 @@
 import { z } from "zod";
 import crypto from "crypto";
-import { Cookies } from "../cookies";
-import { env } from "../../../env";
+import type { AuthProvider } from "../constants";
+import { env } from "@/env";
+import type { Cookies } from "../cookies";
 import { createGithubOAuthClient } from "./github";
+import { getUserFromSession } from "../session";
 
 const STATE_COOKIE_KEY = "oAuthState";
 const CODE_VERIFIER_COOKIE_KEY = "oAuthCodeVerifier";
-// Ten minutes in seconds
+// 10 minutes in seconds
 const COOKIE_EXPIRATION_SECONDS = 60 * 10;
 
-export type OAuthProvider = "github";
-
 export class OAuthClient<T> {
-  private readonly provider: OAuthProvider;
+  private readonly provider: AuthProvider;
   private readonly clientId: string;
   private readonly clientSecret: string;
   private readonly scopes: string[];
@@ -20,6 +20,7 @@ export class OAuthClient<T> {
     auth: string;
     token: string;
     user: string;
+    revoke_token: string;
   };
   private readonly userInfo: {
     schema: z.ZodSchema<T>;
@@ -38,7 +39,7 @@ export class OAuthClient<T> {
     urls,
     userInfo,
   }: {
-    provider: OAuthProvider;
+    provider: AuthProvider;
     clientId: string;
     clientSecret: string;
     scopes: string[];
@@ -46,6 +47,7 @@ export class OAuthClient<T> {
       auth: string;
       token: string;
       user: string;
+      revoke_token: string;
     };
     userInfo: {
       schema: z.ZodSchema<T>;
@@ -99,11 +101,10 @@ export class OAuthClient<T> {
     })
       .then((res) => res.json())
       .then((rawData) => {
-        const { data, success, error } =
-          this.userInfo.schema.safeParse(rawData);
-        if (!success) throw new InvalidUserError(error);
+        const result = this.userInfo.schema.safeParse(rawData);
+        if (!result?.success) throw new InvalidUserError(result?.error);
 
-        return data;
+        return result?.data;
       });
 
     // Return user info and token for storing in the session
@@ -131,18 +132,70 @@ export class OAuthClient<T> {
     })
       .then((res) => res.json())
       .then((rawData) => {
-        const { data, success, error } = this.tokenSchema.safeParse(rawData);
-        if (!success) throw new InvalidTokenError(error);
+        const result = this.tokenSchema.safeParse(rawData);
+
+        if (!result.success) {
+          throw new InvalidTokenError(result.error);
+        }
+
+        const { access_token, token_type } = result.data;
 
         return {
-          accessToken: data.access_token,
-          tokenType: data.token_type,
+          accessToken: access_token,
+          tokenType: token_type,
         };
       });
   }
+
+  async revokeToken(cookies: Pick<Cookies, "get">) {
+    const user = getUserFromSession(cookies);
+    if (user?.accessToken && user.provider === "github") {
+      const clientId = this.clientId;
+      const clientSecret = this.clientSecret;
+      if (!clientId || !clientSecret) {
+        console.error(
+          "GitHub Client ID or Client Secret not configured in environment variables."
+        );
+        return;
+      }
+      try {
+        const response = await fetch(
+          `${this.urls.revoke_token}/${clientId}/grant`,
+          {
+            method: "DELETE",
+            headers: {
+              Accept: "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+              "Content-Type": "application/json",
+              Authorization: "Basic " + btoa(`${clientId}:${clientSecret}`),
+            },
+            body: JSON.stringify({
+              access_token: user?.accessToken,
+            }),
+          }
+        );
+
+        if (response.ok || response.status === 204) {
+          console.log("Successfully requested GitHub access token revocation.");
+          // No content is expected for successful deletion
+        } else {
+          console.error(
+            "Failed to request GitHub access token revocation:",
+            response.status,
+            await response.text()
+          );
+        }
+      } catch (error) {
+        console.error(
+          "An error occurred during the GitHub revoke request:",
+          error
+        );
+      }
+    }
+  }
 }
 
-export function getOAuthClient(provider: OAuthProvider) {
+export function getOAuthClient(provider: AuthProvider) {
   switch (provider) {
     case "github":
       return createGithubOAuthClient();
@@ -222,4 +275,3 @@ class InvalidCodeVerifierError extends Error {
     super("Invalid Code Verifier");
   }
 }
-

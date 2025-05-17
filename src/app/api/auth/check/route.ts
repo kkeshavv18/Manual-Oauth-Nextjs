@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCookieAdapter } from "../../../../lib/auth/cookies";
-import { getUserFromSession } from "../../../../lib/auth/session";
+import { getCookieAdapter } from "@/lib/auth/cookies";
+import { getUserFromSession } from "@/lib/auth/session";
 
 export async function GET(request: NextRequest) {
   const cookies = await getCookieAdapter();
   const user = getUserFromSession(cookies);
+  console.log("user in check function: ", user);
 
   if (!user) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
@@ -18,6 +19,7 @@ export async function GET(request: NextRequest) {
       email: user.email,
       role: user.role,
       provider: user.provider,
+      accessToken: user.accessToken,
     },
   });
 }

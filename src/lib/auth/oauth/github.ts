@@ -12,6 +12,7 @@ export function createGithubOAuthClient() {
       auth: "https://github.com/login/oauth/authorize",
       token: "https://github.com/login/oauth/access_token",
       user: "https://api.github.com/user",
+      revoke_token: "https://api.github.com/applications",
     },
     userInfo: {
       schema: z.object({

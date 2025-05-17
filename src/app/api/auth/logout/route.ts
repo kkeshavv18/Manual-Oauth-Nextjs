@@ -1,13 +1,13 @@
+import { getCookieAdapter } from "@/lib/auth/cookies";
+import { getOAuthClient } from "@/lib/auth/oauth/base";
 import { NextRequest, NextResponse } from "next/server";
-import { getCookieAdapter } from "../../../../lib/auth/cookies";
-import { removeUserFromSession } from "../../../../lib/auth/session";
 
 export async function GET(request: NextRequest) {
-  const cookies = getCookieAdapter();
+  const oauthClient = getOAuthClient("github");
+  const cookies = await getCookieAdapter();
 
-  // Remove user session
-  removeUserFromSession(cookies);
-
-  // Redirect to login page
+  //revoking access token from github and deleting the session cookie
+  await oauthClient.revokeToken(cookies);
+  cookies.delete("session");
   return NextResponse.redirect(new URL("/login", request.url));
 }

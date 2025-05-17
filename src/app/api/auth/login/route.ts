@@ -1,6 +1,6 @@
+import { getCookieAdapter } from "@/lib/auth/cookies";
+import { getOAuthClient } from "@/lib/auth/oauth/base";
 import { NextRequest, NextResponse } from "next/server";
-import { getOAuthClient } from "../../../../lib/auth/oauth/base";
-import { getCookieAdapter } from "../../../../lib/auth/cookies";
 
 export async function GET(request: NextRequest) {
   const provider = request.nextUrl.searchParams.get("provider");

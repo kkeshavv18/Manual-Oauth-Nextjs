@@ -1,10 +1,9 @@
 import { z } from "zod";
 import crypto from "crypto";
-import { Cookies } from "./cookies";
-import { env } from "../../env";
+import type { Cookies } from "./cookies";
+import { env } from "@/env";
 
-// Seven days in seconds
-const SESSION_EXPIRATION_SECONDS = 60;
+const SESSION_EXPIRATION_SECONDS = 60 * 60 * 24 * 7;
 const COOKIE_SESSION_KEY = "session";
 
 export const userRoles = ["user", "admin"] as const;
@@ -20,7 +19,6 @@ export const sessionSchema = z.object({
 
 export type UserSession = z.infer<typeof sessionSchema>;
 
-// Instead of Redis, we'll use encrypted cookies
 export function getUserFromSession(
   cookies: Pick<Cookies, "get">
 ): UserSession | null {
@@ -44,10 +42,6 @@ export function createUserSession(
   const encrypted = encryptSession(JSON.stringify(sessionData));
 
   setCookie(encrypted, cookies);
-}
-
-export function removeUserFromSession(cookies: Pick<Cookies, "delete">) {
-  cookies.delete(COOKIE_SESSION_KEY);
 }
 
 function setCookie(sessionData: string, cookies: Pick<Cookies, "set">) {

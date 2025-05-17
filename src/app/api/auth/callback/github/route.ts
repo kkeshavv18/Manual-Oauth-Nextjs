@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOAuthClient } from "../../../../../lib/auth/oauth/base";
-import { getCookieAdapter } from "../../../../../lib/auth/cookies";
-import { createUserSession } from "../../../../../lib/auth/session";
+import { getOAuthClient } from "@/lib/auth/oauth/base";
+import { getCookieAdapter } from "@/lib/auth/cookies";
+import { createUserSession } from "@/lib/auth/session";
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
